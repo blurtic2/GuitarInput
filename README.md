@@ -13,6 +13,8 @@
 - Picking while Button1 and 2 are pressed -> Keyboard Z, S input
 - Start Button press -> Keyboard Q input
 - Tilt controller up -> Keyboard E input
+- Youtube
+  - https://www.youtube.com/watch?v=cqPj347v8Do
 
 # Limitation
 It cannot handle long notes at all.
