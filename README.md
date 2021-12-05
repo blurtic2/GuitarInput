@@ -12,6 +12,7 @@
 - Picking while Button1 is pressed -> Keyboard Z input
 - Picking while Button1 and 2 are pressed -> Keyboard Z, S input
 - Start Button press -> Keyboard Q input
+- Tilt controller up -> Keyboard E input
 
 # Limitation
 It cannot handle long notes at all.
