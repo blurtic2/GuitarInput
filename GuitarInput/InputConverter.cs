@@ -36,8 +36,6 @@ namespace GuitarFreaksInput
         const byte STATUS2_INDEX_WAILING_UP = 2;
         const byte STATUS2_INDEX_WAILING_DOWN = 3;
 
-        const int POLLING_RATE = 10;
-
         static bool[] LastGuitarKeyStatus = new bool[11];
         static bool[] CurrentGuitarKeyStatus = new bool[11];
         static bool[] PickStatus = new bool[5];
@@ -82,6 +80,15 @@ namespace GuitarFreaksInput
                 }
             }
 
+            // Release all buttons if picking lever is not activated
+            if (!Current[(int)GuitarKeyList.Pick_Up] && !Current[(int)GuitarKeyList.Pick_Down])
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    SendKeyUp(keyCodes[i]);
+                }
+            }
+
             // handle other inputs in general way.
             for (int i = 7; i < 11; i++)
             {
@@ -112,14 +119,14 @@ namespace GuitarFreaksInput
             var Devices = FilteredDeviceList.Local.GetHidDevices(GITALLER_VENDER_ID, GITALLER_PRODUCT_ID);
             if (Devices.Count() == 0)
             {
-                Console.WriteLine("No device has been found.");
+                Console.WriteLine("No GITALLER has been found.");
                 Console.ReadKey();
                 return;
             }
 
-            foreach (HidDevice device in Devices)
+                foreach (HidDevice device in Devices)
             {
-                Console.WriteLine("Device found.\nPolling rate : " + POLLING_RATE + "ms");
+                Console.WriteLine("Device found.");
                 HidStream connection;
                 HidDeviceInputReceiver inputReceiver;
 
@@ -129,33 +136,34 @@ namespace GuitarFreaksInput
 
                 device.TryOpen(options, out connection);
                 var reportDescriptor = device.GetReportDescriptor();
-                inputReceiver = new HidDeviceInputReceiver(reportDescriptor);
+                inputReceiver = reportDescriptor.CreateHidDeviceInputReceiver();
                 inputReceiver.Start(connection);
 
-                byte[] buffer = new byte[20];
+                byte[] buffer = new byte[device.GetMaxInputReportLength()];
                 while (true)
-                {
-                    // release all button 1~5 keydowns
-                    for (int i = 0; i < 5; i++)
-                    {
-                        if (PickStatus[i])
-                        {
-                            SendKeyUp(keyCodes[i]);
-                            PickStatus[i] = false;
-                        }
-                    }
-
+                {                    
                     HidSharp.Reports.Report report;
                     bool result = inputReceiver.TryRead(buffer, 0, out report);
+                    bool inputChanged = false;
                     if (result)
                     {
                         byte ButtonStatus = buffer[INPUT_STATUS_INDEX];
                         byte ButtonStatus2 = buffer[INPUT_STATUS_INDEX2];
                         ParseKeyInput(ButtonStatus, ButtonStatus2, CurrentGuitarKeyStatus);
-                        EmulateKeyboardInput(CurrentGuitarKeyStatus, LastGuitarKeyStatus);
+                        for(int i=0; i<CurrentGuitarKeyStatus.Length; i++)
+                        {
+                            if(LastGuitarKeyStatus[i] != CurrentGuitarKeyStatus[i])
+                            {
+                                inputChanged = true;
+                                break;
+                            }
+                        }
+                        if (inputChanged)
+                        {
+                            EmulateKeyboardInput(CurrentGuitarKeyStatus, LastGuitarKeyStatus);
+                        }
                     }
-
-                    Thread.Sleep(POLLING_RATE);
+                    inputReceiver.WaitHandle.WaitOne();
                 }
             }
         }
