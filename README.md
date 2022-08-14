@@ -15,6 +15,3 @@
 - Tilt controller up -> Keyboard E input
 - YouTube
   - https://www.youtube.com/watch?v=cqPj347v8Do
-
-# Limitation
-It cannot handle long notes at all.
